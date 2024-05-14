@@ -27,4 +27,20 @@ $ cat ~/.ssh/jenkinsAgent_rsa
 
 //https://docs.cloudbees.com/docs/cloudbees-ci-kb/latest/client-and-managed-controllers/how-to-connect-to-remote-ssh-agents
 
+## Slave Configuration on Jenkins
+Manage Jenkins----Nodes------New Nodes
+
+Remote root director: /home/ubuntu
+Labels: Machine name
+Usage: Use this node as much as possible
+Launch Methods: Launch agents via SSH
+Host: Machine Public IP
+Credentials: Add
+	Kind: SSH Username with private key
+	ID: Any name
+	Username: ubuntu
+	Private Key: Enter directly
+	#Paste private key from slave machine
+Host Key Verification Strategy: Non Verification Strategy
+Availability: Keep this agent online as much as possible
 
