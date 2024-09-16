@@ -27,7 +27,7 @@ $ cat ~/.ssh/jenkinsAgent_rsa
 
 //https://docs.cloudbees.com/docs/cloudbees-ci-kb/latest/client-and-managed-controllers/how-to-connect-to-remote-ssh-agents
 
-## Slave Configuration on Jenkins
+## Slave Configuration on Master Jenkins Node
 Manage Jenkins----Nodes------New Nodes
 
 Remote root director: /home/ubuntu
