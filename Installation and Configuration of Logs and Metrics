@@ -1,0 +1,41 @@
+Step 1: Create PV for Loki:
+
+kind: PersistentVolume
+metadata:
+  name: pv-volume
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: "local-path"
+  hostPath:
+    path: "/mnt/data"
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+EOF
+
+Step 2: Change Values.yaml of Helm:
+
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm show values grafana/loki-stack > /tmp/loki-stack-values.yaml
+
+Add in Loki:
+
+securityContext:
+  runAsGroup: 0
+  runAsNonRoot: false
+  runAsUser: 0
+
+persistence:
+   enabled: true
+   size: 1Gi
+   storageClassName: local-path
+
+Modify grafana and prometheus enabled to true from false
+Remove logtash,filebeat and fluentbit
+
+Step 3: After Installation:
+Change the service type of Grafana to NodePort.
+kubectl get secret -n monitoring loki-stack-grafana -o jsonpath='{.data.admin-password}' | base64 -d ;echo
+
