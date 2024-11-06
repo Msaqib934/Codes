@@ -36,6 +36,7 @@ Modify grafana and prometheus enabled to true from false
 Remove logtash,filebeat and fluentbit
 
 Step 3: After Installation:
+
 Change the service type of Grafana to NodePort.
 kubectl get secret -n monitoring loki-stack-grafana -o jsonpath='{.data.admin-password}' | base64 -d ;echo
 
