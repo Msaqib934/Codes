@@ -1,7 +1,30 @@
 # Fluent-bit yaml for sending logs to S3 Bucket 
 # Add output to send logs to loki to Elasticsearch
 # kubectl create secret generic fluentbit-s3-key --from-literal=AWS_ACCESS_KEY_ID=<REPLACE THE KAY ID HERE> --from-literal=AWS_SECRET_ACCESS_KEY=<REPLACE THE ACCESS KEY STRING HERE>
+# Setup Role and permission in S3 Bucket
 
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::824813378441:role/s3"
+            },
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::lokicheck",
+                "arn:aws:s3:::lokicheck/*"
+            ]
+        }
+    ]
+}
+
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
