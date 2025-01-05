@@ -1,0 +1,111 @@
+#Install NodeExporter, Alert Manager, Promethes and Grafana
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus prometheus-community/kube-prometheus-stack -n loki --create-namespace
+
+Loki Setup:
+
+# First: make web identity IAM by OIDC of EKS
+# Second: Make Role with administrator access (for checking purpose only) and Configure Trust Relationship
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Federated": "arn:aws:iam::824813378441:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/F82E510321D94265F1271E72B129A087"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+                "StringEquals": {
+                    "oidc.eks.us-east-1.amazonaws.com/id/F82E510321D94265F1271E72B129A087:sub": "system:serviceaccount:loki:loki"
+                }
+            }
+        }
+    ]
+}
+# Third: Set Bucket Permission
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::824813378441:role/loki-role"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::check321"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::824813378441:role/loki-role"
+            },
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "arn:aws:s3:::check321/*"
+        }
+    ]
+}
+# Fourth: Configure helm chart values.yaml file
+
+  schemaConfig:
+    configs:
+    - from: "2020-09-07"
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: loki_index_
+        period: 24h
+
+  # -- Check https://grafana.com/docs/loki/latest/configuration/#storage_config for more info on how to configure storages
+  storageConfig:
+    boltdb_shipper:
+      shared_store: aws
+      active_index_directory: /var/loki/index
+      cache_location: /var/loki/cache
+      cache_ttl: 168h
+    filesystem:
+      directory: /var/loki/chunks
+# -- Uncomment to configure each storage individually
+#   azure: {}
+#   gcs: {}
+    aws:
+     s3: s3://us-east-1 
+     bucketnames: check321
+#   boltdb: {}
+
+  # -- Structured loki configuration, takes precedence over `loki.config`, `loki.schemaConfig`, `loki.storageConfig`
+  structuredConfig: {}
+
+# -- Provides a reloadable runtime configuration file for some specific configuration
+runtimeConfig: {}
+
+serviceAccount:
+  # -- Specifies whether a ServiceAccount should be created
+  create: true
+  # -- The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: loki
+  # -- Image pull secrets for the service account
+  imagePullSecrets: []
+  # -- Labels for the service account
+  labels: {}
+  # -- Annotations for the service account
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::824813378441:role/loki-role
+  # -- Set this toggle to false to opt out of automounting API credentials for the service account
+  automountServiceAccountToken: true
+
+# Fifth: Helm install
+
+helm install --values values.yaml loki grafana/loki -n loki --create-namespace
+
+# Sixth: Grafana Connection:
+http://loki-loki-distributed-query-frontend.loki.svc.cluster.local:3100
+paste this URL in connection Database site
