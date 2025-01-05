@@ -109,3 +109,9 @@ helm install --values values.yaml loki grafana/loki -n loki --create-namespace
 # Sixth: Grafana Connection:
 http://loki-loki-distributed-query-frontend.loki.svc.cluster.local:3100
 paste this URL in connection Database site
+
+# Install Promtail:
+helm install prom grafana/promtail --values tail.yaml -n loki
+Set client URL
+clients:
+    - url: http://loki-loki-distributed-gateway/loki/api/v1/push
