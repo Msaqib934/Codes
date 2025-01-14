@@ -32,3 +32,6 @@ Third Step: Add config_path in config.toml
 Fourth Pull Images:
 
 ctr image pull --hosts-dir "/etc/containerd/certs.d" 100.27.227.18:8083/springapp:37
+
+
+https://blog.realvarez.com/use-containerd-to-handle-k8s-gcr-io-deprecation/
