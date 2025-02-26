@@ -25,3 +25,40 @@ Step 4: Now start and check the service is running:
 
 sudo service prometheus start
 sudo service prometheus status
+
+------
+Install Node Exporter
+
+Step 1: Download
+wget https://github.com/prometheus/node_exporter/releases/download/v1.9.0/node_exporter-1.9.0.linux-amd64.tar.gz
+
+Step 2: Copy to systemd location:
+
+tar xvf node_exporter-1.9.0.linux-amd64.tar.gz
+cd node_exporter-1.9.0.linux-amd64
+cp -r . /usr/local/bin/node_exporter
+
+Step 3: Create a file called node_exporter.service:
+
+sudo nano /etc/systemd/system/node_exporter.service
+
+[Unit]
+Description=Prometheus Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/node_exporter/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+
+Step 4: Now start and check the service is running:
+
+sudo service node_exporter start
+sudo service node_exporter status
+
+Step 5: Change prometheus.yml to set exporter in scrap config:
+["localhost:9100"]
+
+Step 6: systemctl daemon-reload
