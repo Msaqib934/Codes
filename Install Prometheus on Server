@@ -27,6 +27,7 @@ sudo service prometheus start
 sudo service prometheus status
 
 ------
+
 Install Node Exporter
 
 Step 1: Download
@@ -62,3 +63,106 @@ Step 5: Change prometheus.yml to set exporter in scrap config:
 ["localhost:9100"]
 
 Step 6: systemctl daemon-reload
+
+----
+
+Step 1: Download
+wget https://github.com/prometheus/alertmanager/releases/download/v0.28.0/alertmanager-0.28.0.linux-amd64.tar.gz
+
+Step 2:
+tar xvf alertmanager-0.28.0.linux-amd64.tar.gz
+cd alertmanager-0.28.0.linux-amd64
+cp -r . /usr/local/bin/alert_manager
+
+Step 3: Create a file called alert_manager.service:
+
+sudo nano /etc/systemd/system/alert.service
+
+[Unit]
+Description=Alert_Manager Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/alert_manager/alertmanager --config.file=/usr/local/bin/alert_manager/alertmanager.yml
+
+[Install]
+WantedBy=multi-user.target
+
+Step 4: Now start and check the service is running:
+
+sudo service alert start
+sudo service alert status
+
+Step 5: Make a file alert.rules.yml in this location /usr/local/bin/prometheus
+
+groups:
+- name: alert.rules
+  rules:
+  - alert: InstanceDown
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: "critical"
+    annotations:
+      summary: "Endpoint {{ $labels.instance }} down"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minutes."
+  
+  - alert: HostOutOfMemory
+    expr: node_memory_MemAvailable / node_memory_MemTotal * 100 < 25
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host out of memory (instance {{ $labels.instance }})"
+      description: "Node memory is filling up (< 25% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+
+  - alert: HostOutOfDiskSpace
+    expr: (node_filesystem_avail{mountpoint="/"}  * 100) / node_filesystem_size{mountpoint="/"} < 50
+    for: 1s
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host out of disk space (instance {{ $labels.instance }})"
+      description: "Disk is almost full (< 50% left)\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+
+  - alert: HostHighCpuLoad
+    expr: (sum by (instance) (irate(node_cpu{job="node_exporter_metrics",mode="idle"}[5m]))) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host high CPU load (instance {{ $labels.instance }})"
+      description: "CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+
+Step 6: Setup alert.rules.yml file and configure alert_manager in /usr/local/bin/prometheus/prometheus.yml
+
+rule_files:
+  - alert.rules.yml
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - 'localhost:9093'
+
+Step 7: Alert notification configuration /usr/local/bin/alert_manager/alert.yml
+
+global:
+ resolve_timeout: 1m
+
+route:
+ receiver: 'email-notifications'
+
+receivers:
+- name: 'email-notifications'
+  email_configs:
+  - to: test@gmail.com
+    from: test@gmail.com
+    smarthost: smtp.gmail.com:587
+    auth_username: test@gmail.com
+    auth_identity: test@gmail.com
+    auth_password: password
+    send_resolved: true
+
