@@ -166,3 +166,9 @@ receivers:
     auth_password: password
     send_resolved: true
 
+Step 8: Firewall setup
+
+sudo ufw enable
+ufw status verbose
+sudo ufw allow out to 142.250.27.108 port 587 proto tcp
+https://myaccount.google.com/apppasswords
