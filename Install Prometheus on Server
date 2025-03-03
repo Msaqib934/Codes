@@ -161,9 +161,9 @@ receivers:
   - to: test@gmail.com
     from: test@gmail.com
     smarthost: smtp.gmail.com:587
-    auth_username: test@gmail.com
-    auth_identity: test@gmail.com
-    auth_password: password
+    auth_username: "test@gmail.com"
+    auth_identity: "test@gmail.com"
+    auth_password: password    (paste without space)
     send_resolved: true
 
 Step 8: Firewall setup
