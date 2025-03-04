@@ -16,6 +16,7 @@ sudo apt-get update
 # Installs the latest OSS release:
 sudo apt-get install grafana
 
+sudo /bin/systemctl start grafana-server
 
 ---
 Install Promtail
