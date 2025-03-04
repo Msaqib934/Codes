@@ -1,0 +1,104 @@
+---
+Install Grafana
+---
+sudo apt-get install -y apt-transport-https software-properties-common wget
+
+sudo mkdir -p /etc/apt/keyrings/
+wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+
+echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+
+echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com beta main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+
+# Updates the list of available packages
+sudo apt-get update
+
+# Installs the latest OSS release:
+sudo apt-get install grafana
+
+
+---
+Install Promtail
+---
+
+cd /usr/local/bin/promtail
+
+wget -qO promtail-linux-amd64.zip https://github.com/grafana/loki/releases/download/v3.1.1/promtail-linux-amd64.zip
+
+unzip -o promtail-linux-amd64.zip
+
+wget https://raw.githubusercontent.com/grafana/loki/v3.0.0/clients/cmd/promtail/promtail-docker-config.yaml -O promtail-config.yaml
+
+change to localhost in client link
+
+cat /etc/systemd/system/promtail.service
+
+[Unit]
+Description=Promtail Log Collector
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/promtail/promtail-linux-amd64 --config.file=/usr/local/bin/promtail/promtail-config.yaml
+Restart=always
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+
+
+sudo systemctl daemon-reload
+
+# Enable services to start on boot
+sudo systemctl enable promtail.service
+
+# Start the services
+sudo systemctl start promtail.service
+
+# Check service status (optional)
+sudo systemctl status promtail.service
+
+journalctl -u promtail.service -f
+
+---
+Install Loki
+---
+
+cd /usr/local/bin/loki
+
+wget -qO loki-linux-amd64.zip https://github.com/grafana/loki/releases/download/v3.1.1/loki-linux-amd64.zip
+
+unzip -o loki-linux-amd64.zip
+
+wget https://raw.githubusercontent.com/grafana/loki/v3.0.0/cmd/loki/loki-local-config.yaml -O loki-config.yaml
+
+cat /etc/systemd/system/loki.service
+
+[Unit]
+Description=Loki Logging System
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/loki/loki-linux-amd64 --config.file=/usr/local/bin/loki/loki-config.yaml
+Restart=always
+User=nobody
+Group=nogroup
+
+[Install]
+WantedBy=multi-user.target
+
+# Reload systemd to recognize new service files
+sudo systemctl daemon-reload
+
+# Enable services to start on boot
+sudo systemctl enable loki.service
+
+# Start the services
+sudo systemctl start loki.service
+
+# Check service status (optional)
+sudo systemctl status loki.service
+
+
+https://grafana.com/docs/grafana/latest/setup-grafana/installation/debian/
+https://docs.techdox.nz/loki/
