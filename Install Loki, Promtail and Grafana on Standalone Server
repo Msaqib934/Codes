@@ -29,6 +29,33 @@ unzip -o promtail-linux-amd64.zip
 
 wget https://raw.githubusercontent.com/grafana/loki/v3.0.0/clients/cmd/promtail/promtail-docker-config.yaml -O promtail-config.yaml
 
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://localhost:3100/loki/api/v1/push
+
+scrape_configs:
+- job_name: system
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: varlogs
+      __path__: /var/log/*log
+
+- job_name: docker-logs
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: docker
+      __path__: /var/lib/docker/containers/*/*.log
+
 change to localhost in client link
 
 cat /etc/systemd/system/promtail.service
