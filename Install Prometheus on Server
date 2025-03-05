@@ -1,3 +1,7 @@
+---
+Install Promethues
+---
+
 Step 1: Install Binary:
 wget https://github.com/prometheus/prometheus/releases/download/v3.2.1/prometheus-3.2.1.linux-amd64.tar.gz
 
@@ -26,9 +30,9 @@ Step 4: Now start and check the service is running:
 sudo service prometheus start
 sudo service prometheus status
 
-------
-
+---
 Install Node Exporter
+---
 
 Step 1: Download
 wget https://github.com/prometheus/node_exporter/releases/download/v1.9.0/node_exporter-1.9.0.linux-amd64.tar.gz
@@ -64,7 +68,9 @@ Step 5: Change prometheus.yml to set exporter in scrap config:
 
 Step 6: systemctl daemon-reload
 
-----
+---
+Install Alert
+---
 
 Step 1: Download
 wget https://github.com/prometheus/alertmanager/releases/download/v0.28.0/alertmanager-0.28.0.linux-amd64.tar.gz
@@ -175,7 +181,7 @@ https://myaccount.google.com/apppasswords
 
 ----
 for Docker Metrics Configuration:
-
+----
 {
  "metrics-addr" : "0.0.0.0:9323"
  "experimental" : true"
@@ -192,3 +198,33 @@ nano /etc/docker/daemon.json
 # Checking of Metrics
 curl http://localhost:9323/metrics
 engine_daemon_container_states_containers{state="stopped"}
+
+----
+To get Container Level Metrics Use Cadvisor
+----
+# Run Docker container of cadvisor
+
+VERSION=v0.49.1
+sudo docker run \
+  --volume=/:/rootfs:ro \
+  --volume=/var/run:/var/run:ro \
+  --volume=/sys:/sys:ro \
+  --volume=/var/lib/docker/:/var/lib/docker:ro \
+  --volume=/dev/disk/:/dev/disk:ro \
+  --publish=8080:8080 \
+  --detach=true \
+  --name=cadvisor \
+  --privileged \
+  --device=/dev/kmsg \
+  gcr.io/cadvisor/cadvisor:$VERSION
+
+# Configure Scrap in prometheus.yml
+
+- job_name: "cadvisor"
+    static_configs:
+      - targets: ["localhost:8080"]
+
+# Check Metrics
+
+container_memory_usage_bytes{name="container"} / 1048576
+
