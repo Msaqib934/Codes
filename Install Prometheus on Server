@@ -182,3 +182,4 @@ for Docker Metrics Configuration:
 }
 # telling docker to expose a metrics on 9323 port
 nano /etc/docker/daemon.json
+curl http://localhost:9323/metrics
