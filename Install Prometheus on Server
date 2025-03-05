@@ -182,4 +182,13 @@ for Docker Metrics Configuration:
 }
 # telling docker to expose a metrics on 9323 port
 nano /etc/docker/daemon.json
+
+# Add scrap config in prometheus.yml
+
+- job_name: "docker"
+    static_configs:
+      - targets: ["localhost:9323"]
+
+# Checking of Metrics
 curl http://localhost:9323/metrics
+engine_daemon_container_states_containers{state="stopped"}
