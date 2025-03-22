@@ -1,0 +1,59 @@
+Step 1: Create WebIdentity by OIDC of eks cluster in IAM Role Section
+sts.amazonaws.com 
+
+Step 2: Create Role with Webidentity and set trust relationship
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Federated": "arn:aws:iam::824813378441:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/6F6E2EEBBE5593B8AF57DC2ECE55AC20"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+                "StringEquals": {
+                    "oidc.eks.us-east-1.amazonaws.com/id/6F6E2EEBBE5593B8AF57DC2ECE55AC20:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
+                }
+            }
+        }
+    ]
+}
+
+Step 3: Create Service Account in Eks Cluster
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aws-load-balancer-controller
+  namespace: kube-system
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::824813378441:role/eks-alb-role
+
+Step 4: Install Load Balancer deployment
+
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=demo \
+  --set serviceAccount.create=false \
+  --set region=us-east-1 \
+  --set vpcId=vpc-0800ec816a7889929 \
+  --set serviceAccount.name=aws-load-balancer-controller
+
+Step 5: Set tags of 2 public subnet in same vpc
+
+kubernetes.io/role/elb:1
+
+Remember tags in not should be same as above
+
+Step 6: Check pod, logs and ingress
+
+kubectl get pods -n kube-system | grep aws-load-balancer
+kubectl logs -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller
+kubectl get ingress ingress-service -n user
+kubectl delete pod -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller  (use when reconfigure anything) 
+helm list -n kube-system
